@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: raksha-ai-risk-service
+    env: docker
+    dockerfilePath: ./api/Dockerfile
+    dockerContext: .
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+    healthCheckPath: /health
