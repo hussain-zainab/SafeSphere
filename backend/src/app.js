@@ -34,7 +34,7 @@ app.use('/api/sos', sosRoutes);
 app.use('/api/risk', riskRoutes);
 app.use('/api/route', routeRoutes);
 app.use('/api/safe-places', safePlacesRoutes);
-app.get('/', (req, res) => res.send('RAKSHA AI Backend is running'));
+app.get('/', (req, res) => res.send('SafeSphere AI Backend is running'));
 
 app.use(errorHandler);
 
