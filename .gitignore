@@ -141,3 +141,11 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+
+node_modules/
+backend/.env
+*.pkl
+
+firebase-service-account.json
+backend/firebase-service-account.json
