@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
+import SafeRouteModal from '../components/SafeRouteModal';
 
 // Placeholder risk zone data - will come from Zainab's /predict-risk API later
 const RISK_ZONES = [
@@ -17,8 +18,15 @@ const riskColor = {
 };
 
 export default function MapScreen() {
+  const [routeModalVisible, setRouteModalVisible] = useState(false);
+
   return (
     <View style={styles.container}>
+      <TouchableOpacity style={styles.routeButton} onPress={() => setRouteModalVisible(true)}>
+        <Ionicons name="navigate" size={18} color="#fff" />
+        <Text style={styles.routeButtonText}>Safe Route</Text>
+      </TouchableOpacity>
+
       <MapView
         provider={PROVIDER_GOOGLE}
         style={styles.map}
@@ -49,6 +57,8 @@ export default function MapScreen() {
           </View>
         ))}
       </View>
+
+      <SafeRouteModal visible={routeModalVisible} onClose={() => setRouteModalVisible(false)} />
     </View>
   );
 }
@@ -56,6 +66,20 @@ export default function MapScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
+  routeButton: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    backgroundColor: '#6C4CE0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 20,
+    zIndex: 10,
+    gap: 6,
+  },
+  routeButtonText: { color: '#fff', fontWeight: '700', fontSize: 13 },
   legend: {
     position: 'absolute',
     bottom: 20,
