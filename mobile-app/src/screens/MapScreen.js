@@ -1,17 +1,77 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import { Ionicons } from '@expo/vector-icons';
+
+// Placeholder risk zone data - will come from Zainab's /predict-risk API later
+const RISK_ZONES = [
+  { id: '1', name: 'Connaught Place', lat: 28.6315, lng: 77.2167, level: 'Moderate' },
+  { id: '2', name: 'Rajiv Chowk Metro', lat: 28.6328, lng: 77.2197, level: 'High' },
+  { id: '3', name: 'Lodhi Garden', lat: 28.5931, lng: 77.2197, level: 'Safe' },
+];
+
+const riskColor = {
+  Safe: '#22C55E',
+  Moderate: '#F59E0B',
+  High: '#EF4444',
+};
 
 export default function MapScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Map / Risk Zones</Text>
-      <Text style={styles.subtitle}>Google Map with colored risk pins will go here</Text>
+      <MapView
+        provider={PROVIDER_GOOGLE}
+        style={styles.map}
+        initialRegion={{
+          latitude: 28.6139,
+          longitude: 77.209,
+          latitudeDelta: 0.15,
+          longitudeDelta: 0.15,
+        }}
+      >
+        {RISK_ZONES.map((zone) => (
+          <Marker
+            key={zone.id}
+            coordinate={{ latitude: zone.lat, longitude: zone.lng }}
+            title={zone.name}
+            description={`${zone.level} Risk`}
+            pinColor={riskColor[zone.level]}
+          />
+        ))}
+      </MapView>
+
+      {/* Legend */}
+      <View style={styles.legend}>
+        {Object.entries(riskColor).map(([level, color]) => (
+          <View key={level} style={styles.legendItem}>
+            <View style={[styles.dot, { backgroundColor: color }]} />
+            <Text style={styles.legendText}>{level}</Text>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 22, fontWeight: '600' },
-  subtitle: { color: '#888', marginTop: 6 },
+  container: { flex: 1 },
+  map: { flex: 1 },
+  legend: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 14,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  legendItem: { flexDirection: 'row', alignItems: 'center' },
+  dot: { width: 10, height: 10, borderRadius: 5, marginRight: 6 },
+  legendText: { fontSize: 12, fontWeight: '600', color: '#374151' },
 });

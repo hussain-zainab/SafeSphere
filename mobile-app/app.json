@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "RakshaAI",
-    "slug": "RakshaAI",
+    "name": "SafeSphere",
+    "slug": "SafeSphere",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -19,7 +19,12 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyA1XyH5MuUy4hAf7J7h7mrYE2jS8-t2Hiw"
+        }
+      }
     },
     "web": {
       "output": "static",
