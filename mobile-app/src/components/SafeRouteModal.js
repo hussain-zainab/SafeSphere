@@ -53,7 +53,8 @@ export default function SafeRouteModal({ visible, onClose }) {
 
       if (data.status !== 'OK' || !data.routes.length) {
          console.log('Directions API response:', data.status, data.error_message);
-         Alert.alert('No route found', 'Try a different destination.');   
+         Alert.alert('Coming Soon',
+    'Safe Route is currently in final testing and will be available soon.');   
          setLoading(false);
         return;
       }
