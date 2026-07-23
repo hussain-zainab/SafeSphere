@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import SafeRouteModal from '../components/SafeRouteModal';
+import SafePlacesModal from '../components/SafePlacesModal';
 
 // Placeholder risk zone data - will come from Zainab's /predict-risk API later
 const RISK_ZONES = [
@@ -19,13 +20,24 @@ const riskColor = {
 
 export default function MapScreen() {
   const [routeModalVisible, setRouteModalVisible] = useState(false);
+  const [placesModalVisible, setPlacesModalVisible] = useState(false);
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.routeButton} onPress={() => setRouteModalVisible(true)}>
-        <Ionicons name="navigate" size={18} color="#fff" />
-        <Text style={styles.routeButtonText}>Safe Route</Text>
-      </TouchableOpacity>
+      <View style={styles.buttonRow}>
+        <TouchableOpacity style={styles.routeButton} onPress={() => setRouteModalVisible(true)}>
+          <Ionicons name="navigate" size={18} color="#fff" />
+          <Text style={styles.routeButtonText}>Safe Route</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.routeButton, { backgroundColor: '#3B82F6' }]}
+          onPress={() => setPlacesModalVisible(true)}
+        >
+          <Ionicons name="shield-checkmark" size={18} color="#fff" />
+          <Text style={styles.routeButtonText}>Safe Places</Text>
+        </TouchableOpacity>
+      </View>
 
       <MapView
         provider={PROVIDER_GOOGLE}
@@ -59,6 +71,7 @@ export default function MapScreen() {
       </View>
 
       <SafeRouteModal visible={routeModalVisible} onClose={() => setRouteModalVisible(false)} />
+      <SafePlacesModal visible={placesModalVisible} onClose={() => setPlacesModalVisible(false)} />
     </View>
   );
 }
@@ -66,17 +79,22 @@ export default function MapScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
-  routeButton: {
+  buttonRow: {
     position: 'absolute',
     top: 16,
     left: 16,
+    right: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    zIndex: 10,
+  },
+  routeButton: {
     backgroundColor: '#6C4CE0',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 20,
-    zIndex: 10,
     gap: 6,
   },
   routeButtonText: { color: '#fff', fontWeight: '700', fontSize: 13 },
