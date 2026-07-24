@@ -13,7 +13,7 @@ import SOSButton from '../components/SOSButton';
 
 const Tab = createBottomTabNavigator();
 
-export default function AppNavigator() {
+export default function AppNavigator({ onLogout }) {
   return (
     <NavigationContainer>
       <View style={{ flex: 1 }}>
@@ -54,7 +54,9 @@ export default function AppNavigator() {
           <Tab.Screen name="Map" component={MapScreen} />
           <Tab.Screen name="Report" component={ReportScreen} />
           <Tab.Screen name="History" component={HistoryScreen} />
-          <Tab.Screen name="Profile" component={ProfileScreen} />
+          <Tab.Screen name="Profile">
+            {() => <ProfileScreen onLogout={onLogout} />}
+          </Tab.Screen>
         </Tab.Navigator>
         <SOSButton />
       </View>

@@ -4,7 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 
 const FILTERS = ['All', 'SOS', 'Reports', 'Routes'];
 
-// Placeholder data - will come from getReports() / SOS log API later
+// Placeholder data - will come from getReports() / SOS log API later,
+// once real login/auth token flow is connected (currently demo mode)
 const HISTORY_DATA = [
   {
     id: '1',
@@ -54,6 +55,11 @@ export default function HistoryScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.demoNotice}>
+        <Ionicons name="information-circle-outline" size={14} color="#9CA3AF" />
+        <Text style={styles.demoNoticeText}>Showing sample data for demo</Text>
+      </View>
+
       {/* Filter tabs */}
       <View style={styles.filterRow}>
         {FILTERS.map((filter) => (
@@ -104,6 +110,15 @@ export default function HistoryScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F6FA' },
+
+  demoNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    gap: 6,
+  },
+  demoNoticeText: { fontSize: 11, color: '#9CA3AF' },
 
   filterRow: {
     flexDirection: 'row',

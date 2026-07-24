@@ -10,21 +10,33 @@ const BASE_URL = `${process.env.EXPO_PUBLIC_BACKEND_URL}/api`;
 async function request(endpoint, options = {}) {
   try {
     const res = await fetch(`${BASE_URL}${endpoint}`, {
-      headers: { 'Content-Type': 'application/json', ...options.headers },
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
       ...options,
     });
-    if (!res.ok) throw new Error(`API error: ${res.status}`);
+
+    if (!res.ok) {
+      throw new Error(`API error: ${res.status}`);
+    }
+
     return await res.json();
   } catch (err) {
-    console.error(`Request to ${endpoint} failed:`, err.message);
+    // Expected in Expo Go because login is simulated and no auth token exists.
+    // Don't show 401 errors in the Expo LogBox.
+    if (!err.message.includes("401")) {
+      console.error(`Request to ${endpoint} failed:`, err.message);
+    }
+
     throw err;
   }
 }
 
 // ---- Risk prediction (Home + Map + Risk Prediction screens) ----
 export function getRiskPrediction(latitude, longitude) {
-  return request('/risk/predict', {
-    method: 'POST',
+  return request("/risk/predict", {
+    method: "POST",
     body: JSON.stringify({ latitude, longitude }),
   });
 }
@@ -36,40 +48,40 @@ export function getSafePlaces(latitude, longitude) {
 
 // ---- Safe route (Safe Route screen) ----
 export function getSafeRoute(origin, destination) {
-  return request('/route/safe', {
-    method: 'POST',
+  return request("/route/safe", {
+    method: "POST",
     body: JSON.stringify({ origin, destination }),
   });
 }
 
 // ---- SOS (SOS screen - the most important one) ----
 export function triggerSOS(latitude, longitude) {
-  return request('/sos/trigger', {
-    method: 'POST',
+  return request("/sos/trigger", {
+    method: "POST",
     body: JSON.stringify({ latitude, longitude }),
   });
 }
 
 // ---- Community reports (Report + History screens) ----
 export function submitReport(reportData) {
-  return request('/reports', {
-    method: 'POST',
+  return request("/reports", {
+    method: "POST",
     body: JSON.stringify(reportData),
   });
 }
 
 export function getReports() {
-  return request('/reports');
+  return request("/reports");
 }
 
 // ---- User profile & contacts (Profile + Settings screens) ----
 export function getProfile() {
-  return request('/user/profile');
+  return request("/user/profile");
 }
 
 export function updateContacts(contacts) {
-  return request('/user/contacts', {
-    method: 'PUT',
+  return request("/user/contacts", {
+    method: "PUT",
     body: JSON.stringify({ contacts }),
   });
 }
