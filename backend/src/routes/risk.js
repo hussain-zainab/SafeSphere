@@ -8,31 +8,52 @@ const { getPrediction } = require('../services/mlClient');
 const ONE_HOUR = 60 * 60 * 1000;
 
 router.post('/predict', authMiddleware, async (req, res) => {
-  const { lat, lng, localityId } = req.body;
+  try {
+    const { latitude, longitude } = req.body;
 
-  // Check cache first
-  const cached = await RiskCache.findOne({ localityId }).sort({ computedAt: -1 });
-  if (cached && Date.now() - cached.computedAt.getTime() < ONE_HOUR) {
-    return res.status(200).json(cached);
+    if (latitude == null || longitude == null) {
+      return res.status(400).json({ error: 'latitude and longitude are required' });
+    }
+
+    // Call ML service
+    const prediction = await getPrediction({ lat: latitude, lng: longitude });
+
+    // Locality ko naam ke basis pe find/create krna h (upsert)
+    let locality = await Locality.findOne({ name: prediction.locality });
+    if (!locality) {
+      locality = await Locality.create({
+        name: prediction.locality,
+        district: prediction.district,
+        lat: latitude,
+        lng: longitude,
+        currentRiskScore: prediction.risk_score,
+        riskLevel: prediction.risk_level,
+      });
+    } else {
+      locality.currentRiskScore = prediction.risk_score;
+      locality.riskLevel = prediction.risk_level;
+      locality.lastUpdated = new Date();
+      await locality.save();
+    }
+
+    // Save in Cache (history/analytics ke liye)
+    await RiskCache.create({
+      localityId: locality._id,
+      riskScore: prediction.risk_score,
+      riskLevel: prediction.risk_level,
+      topFactors: prediction.top_factors,
+    });
+
+    res.status(200).json({
+      riskLevel: prediction.risk_level,
+      riskScore: prediction.risk_score,
+      locality: prediction.locality,
+      topFactors: prediction.top_factors,
+    });
+  } catch (err) {
+    console.error('Risk predict error:', err.message);
+    res.status(500).json({ error: 'Failed to compute risk prediction' });
   }
-
-  // Cache stale/missing -> call ML service
-  const prediction = await getPrediction({ lat, lng });
-
-  const newCache = await RiskCache.create({
-    localityId,
-    riskScore: prediction.risk_score,
-    riskLevel: prediction.risk_level,
-    topFactors: prediction.top_factors,
-  });
-
-  await Locality.findByIdAndUpdate(localityId, {
-    currentRiskScore: prediction.risk_score,
-    riskLevel: prediction.risk_level,
-    lastUpdated: new Date(),
-  });
-
-  res.status(200).json(newCache);
 });
 
 router.get('/locality/:name', async (req, res) => {
@@ -41,4 +62,4 @@ router.get('/locality/:name', async (req, res) => {
   res.status(200).json(locality);
 });
 
-module.exports = router; 
+module.exports = router;
