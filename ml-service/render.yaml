@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: raksha-ai-risk-service
+    name: SafeSphere-risk-service
     env: docker
     dockerfilePath: ./api/Dockerfile
     dockerContext: .
