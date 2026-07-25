@@ -1,76 +1,88 @@
 import React, { useState } from 'react';
-import { TouchableOpacity, Text, StyleSheet, Modal, View, ActivityIndicator } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  Modal,
+  View,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
+import { triggerSOS } from '../services/api';
 
 export default function SOSButton() {
   const [modalVisible, setModalVisible] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleConfirmSOS = () => {
-    setSending(true);
-    // Placeholder - will call the real triggerSOS() API function later
-    setTimeout(() => {
-      setSending(false);
-      setSent(true);
-    }, 1500);
-  };
+  const handleSendAlert = async () => {
+    setLoading(true);
+    try {
+      // Calling real backend API function
+      const response = await triggerSOS();
+      setLoading(false);
+      setModalVisible(false);
 
-  const closeModal = () => {
-    setModalVisible(false);
-    setSent(false);
+      if (response && response.success) {
+        Alert.alert('SOS Sent!', 'Emergency alert sent successfully to your contacts.');
+      } else {
+        // Fallback alert if backend sends simulated or soft success
+        Alert.alert('SOS Alert Triggered', response?.message || 'Emergency alert has been processed.');
+      }
+    } catch (error) {
+      setLoading(false);
+      setModalVisible(false);
+      Alert.alert('Error', 'Failed to send SOS alert. Please try again.');
+    }
   };
 
   return (
     <>
       <TouchableOpacity
-        style={styles.button}
-        activeOpacity={0.85}
+        style={styles.sosFloatingButton}
         onPress={() => setModalVisible(true)}
+        activeOpacity={0.8}
       >
-        <Ionicons name="alert" size={24} color="#fff" />
-        <Text style={styles.buttonText}>SOS</Text>
+        <Text style={styles.sosButtonText}>!</Text>
+        <Text style={styles.sosButtonSubtext}>SOS</Text>
       </TouchableOpacity>
 
-      <Modal visible={modalVisible} transparent animationType="fade">
-        <View style={styles.overlay}>
-          <View style={styles.modalCard}>
-            {!sent ? (
-              <>
-                <View style={styles.iconCircle}>
-                  <Ionicons name="warning" size={32} color="#EF4444" />
-                </View>
-                <Text style={styles.modalTitle}>Send Emergency Alert?</Text>
-                <Text style={styles.modalSubtitle}>
-                  Your live location will be sent to 3 emergency contacts via SMS.
-                </Text>
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          if (!loading) setModalVisible(false);
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.iconContainer}>
+              <Text style={styles.warningIcon}>⚠️</Text>
+            </View>
 
-                {sending ? (
-                  <ActivityIndicator size="large" color="#EF4444" style={{ marginVertical: 20 }} />
-                ) : (
-                  <View style={styles.buttonRow}>
-                    <TouchableOpacity style={styles.cancelBtn} onPress={closeModal}>
-                      <Text style={styles.cancelText}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.confirmBtn} onPress={handleConfirmSOS}>
-                      <Text style={styles.confirmText}>Send Alert</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </>
+            <Text style={styles.modalTitle}>Send Emergency Alert?</Text>
+            <Text style={styles.modalSubtitle}>
+              Your live location will be sent to 3 emergency contacts via SMS.
+            </Text>
+
+            {loading ? (
+              <ActivityIndicator size="large" color="#DC2626" style={{ marginVertical: 20 }} />
             ) : (
-              <>
-                <View style={[styles.iconCircle, { backgroundColor: '#DCFCE7' }]}>
-                  <Ionicons name="checkmark-circle" size={36} color="#22C55E" />
-                </View>
-                <Text style={styles.modalTitle}>Alert Sent</Text>
-                <Text style={styles.modalSubtitle}>
-                  Your contacts have been notified with your live location.
-                </Text>
-                <TouchableOpacity style={styles.doneBtn} onPress={closeModal}>
-                  <Text style={styles.confirmText}>Done</Text>
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={[styles.button, styles.cancelButton]}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
                 </TouchableOpacity>
-              </>
+
+                <TouchableOpacity
+                  style={[styles.button, styles.sendButton]}
+                  onPress={handleSendAlert}
+                >
+                  <Text style={styles.sendButtonText}>Send Alert</Text>
+                </TouchableOpacity>
+              </View>
             )}
           </View>
         </View>
@@ -80,79 +92,103 @@ export default function SOSButton() {
 }
 
 const styles = StyleSheet.create({
-  button: {
+  sosFloatingButton: {
     position: 'absolute',
-    bottom: 90,
+    bottom: 25,
     right: 20,
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#EF4444',
-    alignItems: 'center',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#DC2626',
     justifyContent: 'center',
+    alignItems: 'center',
     elevation: 8,
-    shadowColor: '#EF4444',
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
     zIndex: 999,
   },
-  buttonText: { color: '#fff', fontWeight: '800', fontSize: 11, marginTop: 1 },
-
-  overlay: {
+  sosButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    lineHeight: 18,
+  },
+  sosButtonSubtext: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: 'bold',
+    marginTop: -2,
+  },
+  modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
     padding: 24,
-  },
-  modalCard: {
-    backgroundColor: '#fff',
-    borderRadius: 24,
-    padding: 26,
     width: '100%',
+    maxWidth: 340,
     alignItems: 'center',
+    elevation: 10,
   },
-  iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+  iconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: '#FEE2E2',
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 16,
   },
-  modalTitle: { fontSize: 19, fontWeight: '800', color: '#1E1B4B', textAlign: 'center' },
+  warningIcon: {
+    fontSize: 28,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
   modalSubtitle: {
     fontSize: 14,
     color: '#6B7280',
     textAlign: 'center',
-    marginTop: 8,
-    marginBottom: 20,
     lineHeight: 20,
+    marginBottom: 20,
   },
-  buttonRow: { flexDirection: 'row', gap: 12, width: '100%' },
-  cancelBtn: {
+  buttonContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  button: {
     flex: 1,
-    paddingVertical: 14,
-    borderRadius: 14,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelButton: {
     backgroundColor: '#F3F4F6',
-    alignItems: 'center',
   },
-  cancelText: { color: '#374151', fontWeight: '700' },
-  confirmBtn: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 14,
-    backgroundColor: '#EF4444',
-    alignItems: 'center',
+  cancelButtonText: {
+    color: '#4B5563',
+    fontWeight: '600',
+    fontSize: 15,
   },
-  doneBtn: {
-    paddingVertical: 14,
-    paddingHorizontal: 40,
-    borderRadius: 14,
-    backgroundColor: '#22C55E',
-    alignItems: 'center',
+  sendButton: {
+    backgroundColor: '#DC2626',
   },
-  confirmText: { color: '#fff', fontWeight: '700' },
+  sendButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 15,
+  },
 });

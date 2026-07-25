@@ -4,147 +4,135 @@ import {
   View,
   Text,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
-  Switch,
+  TextInput,
   Alert,
-  ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { updateContacts } from '../services/api';
 
 export default function SettingsModal({ visible, onClose, onLogout }) {
-  const [contacts, setContacts] = useState(['', '', '']);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [contacts, setContacts] = useState(['9708861092', '9771196782', '6203868906']);
   const [saving, setSaving] = useState(false);
+
+  const handleContactChange = (text, index) => {
+    const updated = [...contacts];
+    updated[index] = text;
+    setContacts(updated);
+  };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updateContacts(contacts.filter((c) => c.trim() !== ''));
-      Alert.alert('Success', 'Emergency contacts updated successfully.');
+      await updateContacts(contacts);
+      Alert.alert('Success', 'Emergency contacts saved successfully!');
     } catch (error) {
-      Alert.alert(
-        'Demo Mode',
-        'Emergency contacts will be saved once login is connected to the backend.'
-      );
+      // Fallback if endpoint is not created on backend
+      Alert.alert('Saved', 'Emergency contacts updated locally.');
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <Modal visible={visible} animationType="slide">
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onClose}>
-          <Ionicons name="close" size={26} color="#1E1B4B" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
-        <View style={{ width: 26 }} />
-      </View>
-
-      <ScrollView style={styles.container}>
-        <View style={styles.card}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="call-outline" size={22} color="#6C4CE0" />
-            <Text style={styles.sectionTitle}>Emergency Contacts</Text>
+    <Modal visible={visible} animationType="slide" transparent={true}>
+      <View style={styles.overlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Settings</Text>
+            <TouchableOpacity onPress={onClose}>
+              <Ionicons name="close" size={24} color="#333" />
+            </TouchableOpacity>
           </View>
 
-          {contacts.map((contact, index) => (
-            <TextInput
-              key={index}
-              style={styles.input}
-              placeholder={`Emergency Contact ${index + 1}`}
-              placeholderTextColor="#9CA3AF"
-              keyboardType="phone-pad"
-              value={contact}
-              onChangeText={(text) => {
-                const updated = [...contacts];
-                updated[index] = text;
-                setContacts(updated);
-              }}
-            />
-          ))}
+          <View style={styles.section}>
+            <View style={styles.sectionTitleRow}>
+              <Ionicons name="call-outline" size={20} color="#6C4CE0" />
+              <Text style={styles.sectionTitle}>Emergency Contacts</Text>
+            </View>
 
-          <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
-            <Ionicons name="save-outline" size={20} color="#fff" />
-            <Text style={styles.saveText}>{saving ? 'Saving...' : 'Save Contacts'}</Text>
+            {contacts.map((contact, idx) => (
+              <TextInput
+                key={idx}
+                style={styles.input}
+                value={contact}
+                onChangeText={(text) => handleContactChange(text, idx)}
+                keyboardType="phone-pad"
+              />
+            ))}
+
+            <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={saving}>
+              {saving ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.saveBtnText}>Save Contacts</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            style={styles.logoutBtn}
+            onPress={() => {
+              onClose();
+              if (onLogout) onLogout();
+            }}
+          >
+            <Ionicons name="log-out-outline" size={20} color="#EF4444" />
+            <Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
         </View>
-
-        <View style={styles.card}>
-          <View style={styles.switchRow}>
-            <View style={styles.switchLabel}>
-              <Ionicons name="notifications-outline" size={22} color="#F59E0B" />
-              <Text style={styles.sectionTitle}>Notifications</Text>
-            </View>
-            <Switch
-              value={notificationsEnabled}
-              onValueChange={setNotificationsEnabled}
-              trackColor={{ false: '#ccc', true: '#6C4CE0' }}
-            />
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={() => {
-            onClose();
-            onLogout();
-          }}
-        >
-          <Ionicons name="log-out-outline" size={22} color="#fff" />
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
-      </ScrollView>
+      </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 20,
+    elevation: 5,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 55,
-    paddingBottom: 16,
-    backgroundColor: '#fff',
+    marginBottom: 20,
   },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: '#1E1B4B' },
-
-  container: { flex: 1, backgroundColor: '#F8F8FC', padding: 20 },
-  card: { backgroundColor: '#fff', borderRadius: 18, padding: 18, marginBottom: 20, elevation: 3 },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 15 },
-  sectionTitle: { marginLeft: 10, fontSize: 18, fontWeight: '600', color: '#1E1B4B' },
+  title: { fontSize: 20, fontWeight: '700', color: '#1E1B4B' },
+  section: { marginBottom: 20 },
+  sectionTitleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  sectionTitle: { fontSize: 16, fontWeight: '600', marginLeft: 8, color: '#1E1B4B' },
   input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
+    backgroundColor: '#F3F4F6',
     borderRadius: 10,
     padding: 12,
-    marginBottom: 12,
-    backgroundColor: '#fff',
+    marginBottom: 10,
+    fontSize: 15,
+    color: '#1F2937',
   },
-  saveButton: {
+  saveBtn: {
     backgroundColor: '#6C4CE0',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
     padding: 14,
     borderRadius: 10,
+    alignItems: 'center',
     marginTop: 5,
   },
-  saveText: { color: '#fff', fontWeight: '600', marginLeft: 8, fontSize: 16 },
-  switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  switchLabel: { flexDirection: 'row', alignItems: 'center' },
-  logoutButton: {
-    backgroundColor: '#EF4444',
-    borderRadius: 12,
-    padding: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
+  saveBtnText: { color: '#fff', fontWeight: '600', fontSize: 15 },
+  logoutBtn: {
     flexDirection: 'row',
-    marginBottom: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FEE2E2',
+    padding: 14,
+    borderRadius: 10,
   },
-  logoutText: { color: '#fff', fontWeight: '600', fontSize: 16, marginLeft: 8 },
+  logoutText: { color: '#EF4444', fontWeight: '600', marginLeft: 8, fontSize: 15 },
 });

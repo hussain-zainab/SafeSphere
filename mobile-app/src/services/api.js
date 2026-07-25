@@ -1,20 +1,37 @@
 // src/services/api.js
 //
 // This is the ONE file that knows how to talk to Siddiqua's backend.
-// Every screen imports functions from here instead of writing fetch()
-// calls directly - so if the backend URL changes, you only update it once.
+// Every screen imports functions from here instead of writing fetch() calls directly.
 
 const BASE_URL = `${process.env.EXPO_PUBLIC_BACKEND_URL}/api`;
 
-// Generic helper so every function below doesn't repeat error handling
+// Variable to store the active Firebase ID token
+let authToken = null;
+
+/**
+ * Call this function after a successful login/signup to store the token.
+ * Example: setAuthToken(token)
+ */
+export function setAuthToken(token) {
+  authToken = token;
+}
+
+// Generic helper so every function below doesn't repeat error handling & auth headers
 async function request(endpoint, options = {}) {
   try {
+    const headers = {
+      "Content-Type": "application/json",
+      ...options.headers,
+    };
+
+    // Attach Bearer token if available
+    if (authToken) {
+      headers["Authorization"] = `Bearer ${authToken}`;
+    }
+
     const res = await fetch(`${BASE_URL}${endpoint}`, {
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
       ...options,
+      headers,
     });
 
     if (!res.ok) {
@@ -23,12 +40,9 @@ async function request(endpoint, options = {}) {
 
     return await res.json();
   } catch (err) {
-    // Expected in Expo Go because login is simulated and no auth token exists.
-    // Don't show 401 errors in the Expo LogBox.
     if (!err.message.includes("401")) {
       console.error(`Request to ${endpoint} failed:`, err.message);
     }
-
     throw err;
   }
 }
