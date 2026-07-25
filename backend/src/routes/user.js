@@ -8,7 +8,14 @@ router.get('/profile', authMiddleware, async (req, res) => {
 });
 
 router.put('/contacts', authMiddleware, async (req, res) => {
-  const { contacts } = req.body; // array of {name, phone}
+  let { contacts } = req.body;
+
+  // Agar frontend sirf phone numbers ka array bhej raha hai (strings),
+  // to use objects mein convert kar do
+  if (Array.isArray(contacts) && contacts.length > 0 && typeof contacts[0] === 'string') {
+    contacts = contacts.map((phone) => ({ name: '', phone }));
+  }
+
   const updatedUser = await User.findByIdAndUpdate(
     req.user._id,
     { emergencyContacts: contacts },
