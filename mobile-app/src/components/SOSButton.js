@@ -94,7 +94,7 @@ export default function SOSButton() {
 const styles = StyleSheet.create({
   sosFloatingButton: {
     position: 'absolute',
-    bottom: 25,
+    bottom: 80, // 👈 Raised above bottom navigation bar so it doesn't overlap Profile/History
     right: 20,
     width: 60,
     height: 60,

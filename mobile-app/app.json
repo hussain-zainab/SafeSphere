@@ -24,7 +24,8 @@
         "googleMaps": {
           "apiKey": "AIzaSyA1XyH5MuUy4hAf7J7h7mrYE2jS8-t2Hiw"
         }
-      }
+      },
+      "package": "com.shifaa18.SafeSphere"
     },
     "web": {
       "output": "static",
@@ -48,6 +49,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f2e1cecb-be29-4806-904f-7b6a23a3ed3a"
+      }
     }
   }
 }
