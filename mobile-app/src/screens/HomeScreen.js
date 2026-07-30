@@ -1,179 +1,116 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as Location from 'expo-location';
-import { getRiskPrediction } from '../services/api';
 
-const riskTheme = {
-  Safe: { bg: '#DCFCE7', text: '#15803D', icon: '#22C55E' },
-  Moderate: { bg: '#FEF3C7', text: '#B45309', icon: '#F59E0B' },
-  High: { bg: '#FEE2E2', text: '#B91C1C', icon: '#EF4444' },
-};
-
-export default function HomeScreen() {
-  const [loading, setLoading] = useState(true);
-  const [riskData, setRiskData] = useState({
-    level: 'Safe',
-    score: 2,
-    locality: 'Current Location',
-    factors: ['Low crime density', 'Well-lit area nearby'],
-  });
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status === 'granted') {
-          const loc = await Location.getCurrentPositionAsync({});
-          const data = await getRiskPrediction(loc.coords.latitude, loc.coords.longitude);
-
-          if (data) {
-            setRiskData({
-              level: data.riskLevel || data.level || 'Safe',
-              score: data.riskScore ?? data.score ?? 2,
-              locality: data.locality || 'Current Location',
-              factors: data.topFactors || data.factors || ['Monitored safety zone'],
-            });
-          }
-        }
-      } catch (err) {
-        console.log('Risk fetch fallback applied:', err.message);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
-  if (loading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#6C4CE0" />
-        <Text style={styles.loadingText}>Checking your area's safety...</Text>
-      </View>
-    );
-  }
-
-  const theme = riskTheme[riskData.level] || riskTheme.Safe;
-
+export default function HomeScreen({ navigation }) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.greeting}>Hi Shifa 👋</Text>
-      <Text style={styles.subGreeting}>Here's your current area safety status</Text>
-
-      <View style={[styles.riskCard, { backgroundColor: theme.bg }]}>
-        <View style={styles.riskHeader}>
-          <View style={[styles.iconCircle, { backgroundColor: '#fff' }]}>
-            <Ionicons name="shield-checkmark" size={26} color={theme.icon} />
-          </View>
-          <View style={{ marginLeft: 14 }}>
-            <Text style={[styles.riskLevel, { color: theme.text }]}>{riskData.level} Risk</Text>
-            <Text style={[styles.locality, { color: theme.text }]}>{riskData.locality}</Text>
-          </View>
-        </View>
-        <View style={styles.scoreRow}>
-          <Text style={[styles.scoreText, { color: theme.text }]}>Risk Score</Text>
-          <Text style={[styles.scoreValue, { color: theme.text }]}>{riskData.score}/10</Text>
-        </View>
+      {/* Header Banner */}
+      <View style={styles.header}>
+        <Text style={styles.welcomeText}>Welcome to SafeSphere 👋</Text>
+        <Text style={styles.subText}>Your safety network & live zone tracking</Text>
       </View>
 
-      <Text style={styles.sectionTitle}>Why this area?</Text>
-      {riskData.factors.length > 0 ? (
-        riskData.factors.map((factor, index) => (
-          <View key={index} style={styles.factorRow}>
-            <View style={styles.factorIconWrap}>
-              <Ionicons name="information-circle" size={18} color="#6C4CE0" />
-            </View>
-            <Text style={styles.factorText}>{factor}</Text>
+      {/* 🗺️ Interactive Live Map Preview Card (Clickable) */}
+      <TouchableOpacity 
+        style={styles.mapCard}
+        activeOpacity={0.85}
+        onPress={() => navigation.navigate('Map')}
+      >
+        <View style={styles.cardHeader}>
+          <View style={styles.titleRow}>
+            <Ionicons name="map-outline" size={20} color="#6C4CE0" />
+            <Text style={styles.cardTitle}>Live Risk Zone Map</Text>
           </View>
-        ))
-      ) : (
-        <Text style={styles.noFactorsText}>No contributing factors data available yet.</Text>
-      )}
+          <Text style={styles.tapText}>Open Full Map →</Text>
+        </View>
 
-      <Text style={styles.sectionTitle}>Map Preview</Text>
-      <View style={styles.mapPlaceholder}>
-        <Ionicons name="map-outline" size={40} color="#A5B4FC" />
-        <Text style={styles.mapPlaceholderText}>Open the Map tab for live risk zones</Text>
+        {/* Embedded Map Window */}
+        <View style={styles.mapFrame}>
+          <iframe
+            title="Home Map Preview"
+            width="100%"
+            height="160"
+            style={{ border: 0, pointerEvents: 'none' }}
+            src="https://www.openstreetmap.org/export/embed.html?bbox=77.2500%2C28.5400%2C77.3000%2C28.5800&layer=mapnik&marker=28.5615%2C77.2802"
+          />
+        </View>
+
+        {/* Status Indicator */}
+        <View style={styles.cardFooter}>
+          <Text style={styles.legendText}>
+            🔴 <Text style={{ fontWeight: '700' }}>Jamia Nagar:</Text> Caution Zone | 🟢 <Text style={{ fontWeight: '700' }}>NFC:</Text> Safe
+          </Text>
+        </View>
+      </TouchableOpacity>
+
+      {/* Quick Action Buttons */}
+      <View style={styles.quickActions}>
+        <TouchableOpacity 
+          style={[styles.actionBox, { backgroundColor: '#EEF2FF' }]}
+          onPress={() => navigation.navigate('Map')}
+        >
+          <Ionicons name="shield-checkmark" size={24} color="#4F46E5" />
+          <Text style={styles.actionText}>Safe Places</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.actionBox, { backgroundColor: '#ECFDF5' }]}
+          onPress={() => navigation.navigate('Map')}
+        >
+          <Ionicons name="navigate-circle" size={24} color="#10B981" />
+          <Text style={styles.actionText}>Safe Route</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F6FA' },
-  content: { padding: 20, paddingBottom: 40 },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 30 },
-  loadingText: { marginTop: 12, color: '#6B7280', fontSize: 14 },
-  noFactorsText: { color: '#9CA3AF', fontSize: 13, marginBottom: 10 },
-
-  greeting: { fontSize: 26, fontWeight: '800', color: '#1E1B4B' },
-  subGreeting: { fontSize: 14, color: '#6B7280', marginTop: 4, marginBottom: 22 },
-
-  riskCard: {
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 26,
+  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  content: { padding: 16 },
+  header: { marginBottom: 16 },
+  welcomeText: { fontSize: 22, fontWeight: '800', color: '#1E1B4B' },
+  subText: { fontSize: 13, color: '#6B7280', marginTop: 2 },
+  
+  mapCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 12,
+    marginBottom: 16,
+    elevation: 4,
     shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
-  riskHeader: { flexDirection: 'row', alignItems: 'center' },
-  iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  riskLevel: { fontSize: 21, fontWeight: '800' },
-  locality: { fontSize: 14, fontWeight: '500', marginTop: 2, opacity: 0.85 },
-  scoreRow: {
+  cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 18,
-    paddingTop: 14,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.08)',
-  },
-  scoreText: { fontSize: 13, fontWeight: '600', opacity: 0.85 },
-  scoreValue: { fontSize: 15, fontWeight: '800' },
-
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#1E1B4B', marginBottom: 10 },
-  factorRow: {
-    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 14,
     marginBottom: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
-    elevation: 1,
   },
-  factorIconWrap: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#EDE9FE',
-    alignItems: 'center',
-    justifyContent: 'center',
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  cardTitle: { fontSize: 15, fontWeight: '700', color: '#1E1B4B' },
+  tapText: { fontSize: 12, fontWeight: '700', color: '#6C4CE0' },
+  
+  mapFrame: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    height: 160,
   },
-  factorText: { marginLeft: 12, fontSize: 14, color: '#374151', fontWeight: '500' },
+  cardFooter: { marginTop: 10 },
+  legendText: { fontSize: 12, color: '#374151' },
 
-  mapPlaceholder: {
-    height: 170,
-    backgroundColor: '#EEF2FF',
-    borderRadius: 18,
+  quickActions: { flexDirection: 'row', gap: 12 },
+  actionBox: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 4,
+    gap: 6,
   },
-  mapPlaceholderText: { color: '#818CF8', marginTop: 8, fontSize: 13, fontWeight: '500' },
+  actionText: { fontSize: 13, fontWeight: '700', color: '#1F2937' },
 });

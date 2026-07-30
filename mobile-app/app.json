@@ -28,11 +28,10 @@
       "package": "com.shifaa18.SafeSphere"
     },
     "web": {
-      "output": "static",
+      "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router",
       [
         "expo-splash-screen",
         {
@@ -51,7 +50,6 @@
       "reactCompiler": true
     },
     "extra": {
-      "router": {},
       "eas": {
         "projectId": "f2e1cecb-be29-4806-904f-7b6a23a3ed3a"
       }

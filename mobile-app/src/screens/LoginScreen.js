@@ -11,6 +11,7 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -20,7 +21,54 @@ import {
   createUserWithEmailAndPassword,
 } from 'firebase/auth';
 
-// Initialize Firebase app if not already initialized
+// Web Vector Icons Fallback
+const WebIcon = ({ type, size = 20, color = '#6B7280' }) => {
+  if (Platform.OS !== 'web') return null;
+
+  if (type === 'shield') {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <path d="m9 12 2 2 4-4"/>
+      </svg>
+    );
+  }
+  if (type === 'mail') {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+        <polyline points="22,6 12,13 2,6"/>
+      </svg>
+    );
+  }
+  if (type === 'lock') {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+    );
+  }
+  if (type === 'eye') {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+    );
+  }
+  if (type === 'eye-off') {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+        <line x1="1" y1="1" x2="23" y2="23"/>
+      </svg>
+    );
+  }
+  return null;
+};
+
+// Initialize Firebase app
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -52,20 +100,20 @@ export default function LoginScreen({ onLoginSuccess }) {
     }
 
     setLoading(true);
-    Keyboard.dismiss();
+    if (Platform.OS !== 'web') {
+      Keyboard.dismiss();
+    }
 
     try {
       let userCredential;
 
       if (isSignUp) {
-        // Create new user in Firebase
         userCredential = await createUserWithEmailAndPassword(
           auth,
           email.trim(),
           password
         );
       } else {
-        // Sign in existing user
         userCredential = await signInWithEmailAndPassword(
           auth,
           email.trim(),
@@ -73,9 +121,7 @@ export default function LoginScreen({ onLoginSuccess }) {
         );
       }
 
-      // Retrieve real Firebase ID Token
       const token = await userCredential.user.getIdToken();
-
       setLoading(false);
 
       if (onLoginSuccess) {
@@ -103,109 +149,137 @@ export default function LoginScreen({ onLoginSuccess }) {
     }
   };
 
+  const ContentWrapper = Platform.OS === 'web' ? View : TouchableWithoutFeedback;
+  const wrapperProps = Platform.OS === 'web' ? { style: { flex: 1, width: '100%' } } : { onPress: Keyboard.dismiss };
+
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    <ContentWrapper {...wrapperProps}>
       <KeyboardAvoidingView
         style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={styles.innerContainer}>
-          {/* Shield Icon */}
-          <View style={styles.iconContainer}>
-            <Ionicons name="shield-checkmark" size={48} color="#4F46E5" />
-          </View>
-
-          <Text style={styles.title}>
-            {isSignUp ? 'Create an Account' : 'Welcome to SafeSphere'}
-          </Text>
-          <Text style={styles.subtitle}>
-            {isSignUp
-              ? 'Sign up with your email to get started'
-              : 'Sign in with your email account'}
-          </Text>
-
-          {/* Form */}
-          <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <Ionicons
-                name="mail-outline"
-                size={20}
-                color="#6B7280"
-                style={styles.inputIcon}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Email Address"
-                placeholderTextColor="#9CA3AF"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
+        <ScrollView 
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.innerContainer}>
+            {/* Shield Icon */}
+            <View style={styles.iconContainer}>
+              {Platform.OS === 'web' ? (
+                <WebIcon type="shield" size={48} color="#4F46E5" />
+              ) : (
+                <Ionicons name="shield-checkmark" size={48} color="#4F46E5" />
+              )}
             </View>
 
-            <View style={styles.inputContainer}>
-              <Ionicons
-                name="lock-closed-outline"
-                size={20}
-                color="#6B7280"
-                style={styles.inputIcon}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Password (min. 6 characters)"
-                placeholderTextColor="#9CA3AF"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                autoCapitalize="none"
-              />
-              <TouchableOpacity
-                onPress={() => setShowPassword(!showPassword)}
-                style={styles.eyeIcon}
-              >
-                <Ionicons
-                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                  size={20}
-                  color="#6B7280"
+            <Text style={styles.title}>
+              {isSignUp ? 'Create an Account' : 'Welcome to SafeSphere'}
+            </Text>
+            <Text style={styles.subtitle}>
+              {isSignUp
+                ? 'Sign up with your email to get started'
+                : 'Sign in with your email account'}
+            </Text>
+
+            {/* Form */}
+            <View style={styles.form}>
+              <View style={styles.inputContainer}>
+                {Platform.OS === 'web' ? (
+                  <View style={styles.inputIcon}>
+                    <WebIcon type="mail" size={20} color="#6B7280" />
+                  </View>
+                ) : (
+                  <Ionicons
+                    name="mail-outline"
+                    size={20}
+                    color="#6B7280"
+                    style={styles.inputIcon}
+                  />
+                )}
+                <TextInput
+                  style={styles.input}
+                  placeholder="Email Address"
+                  placeholderTextColor="#9CA3AF"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
                 />
+              </View>
+
+              <View style={styles.inputContainer}>
+                {Platform.OS === 'web' ? (
+                  <View style={styles.inputIcon}>
+                    <WebIcon type="lock" size={20} color="#6B7280" />
+                  </View>
+                ) : (
+                  <Ionicons
+                    name="lock-closed-outline"
+                    size={20}
+                    color="#6B7280"
+                    style={styles.inputIcon}
+                  />
+                )}
+                <TextInput
+                  style={styles.input}
+                  placeholder="Password (min. 6 characters)"
+                  placeholderTextColor="#9CA3AF"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeIcon}
+                >
+                  {Platform.OS === 'web' ? (
+                    <WebIcon type={showPassword ? 'eye-off' : 'eye'} size={20} color="#6B7280" />
+                  ) : (
+                    <Ionicons
+                      name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                      size={20}
+                      color="#6B7280"
+                    />
+                  )}
+                </TouchableOpacity>
+              </View>
+
+              <TouchableOpacity
+                style={styles.authButton}
+                onPress={handleAuth}
+                disabled={loading}
+                activeOpacity={0.8}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.authButtonText}>
+                    {isSignUp ? 'Create Account' : 'Sign In'}
+                  </Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.toggleContainer}
+                onPress={() => setIsSignUp(!isSignUp)}
+              >
+                <Text style={styles.toggleText}>
+                  {isSignUp
+                    ? 'Already have an account? '
+                    : "Don't have an account? "}
+                  <Text style={styles.toggleTextBold}>
+                    {isSignUp ? 'Sign In' : 'Sign Up'}
+                  </Text>
+                </Text>
               </TouchableOpacity>
             </View>
-
-            <TouchableOpacity
-              style={styles.authButton}
-              onPress={handleAuth}
-              disabled={loading}
-              activeOpacity={0.8}
-            >
-              {loading ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.authButtonText}>
-                  {isSignUp ? 'Create Account' : 'Sign In'}
-                </Text>
-              )}
-            </TouchableOpacity>
-
-            {/* Toggle between Sign In and Sign Up */}
-            <TouchableOpacity
-              style={styles.toggleContainer}
-              onPress={() => setIsSignUp(!isSignUp)}
-            >
-              <Text style={styles.toggleText}>
-                {isSignUp
-                  ? 'Already have an account? '
-                  : "Don't have an account? "}
-                <Text style={styles.toggleTextBold}>
-                  {isSignUp ? 'Sign In' : 'Sign Up'}
-                </Text>
-              </Text>
-            </TouchableOpacity>
           </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
-    </TouchableWithoutFeedback>
+    </ContentWrapper>
   );
 }
 
@@ -213,9 +287,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F9FAFB',
+    width: '100%',
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
   },
   innerContainer: {
-    flex: 1,
+    width: '100%',
+    maxWidth: 420,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 24,
@@ -234,14 +316,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#111827',
     marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
     color: '#6B7280',
     marginBottom: 32,
+    textAlign: 'center',
   },
   form: {
     width: '100%',
+    zIndex: 999,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -253,6 +338,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 16,
     height: 50,
+    zIndex: 1000,
   },
   inputIcon: {
     marginRight: 10,
@@ -261,9 +347,10 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     color: '#1F2937',
+    height: '100%',
   },
   eyeIcon: {
-    padding: 4,
+    padding: 8,
   },
   authButton: {
     backgroundColor: '#4F46E5',
@@ -277,6 +364,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
+    zIndex: 1000,
   },
   authButtonText: {
     color: '#FFFFFF',
@@ -286,6 +374,7 @@ const styles = StyleSheet.create({
   toggleContainer: {
     marginTop: 20,
     alignItems: 'center',
+    paddingVertical: 8,
   },
   toggleText: {
     fontSize: 14,
@@ -295,4 +384,4 @@ const styles = StyleSheet.create({
     color: '#4F46E5',
     fontWeight: '600',
   },
-}); 
+});
